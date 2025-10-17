@@ -1,0 +1,78 @@
+# -----------------------------------------------------------
+# General ignores
+# -----------------------------------------------------------
+# Operating System
+.DS_Store
+.vscode/
+
+# Editor/IDE ignores
+.idea/  # PyCharm
+*.sublime-project
+*.sublime-workspace
+*.swp
+
+# Build artifacts
+*.pyc
+__pycache__/
+dist/
+build/
+*.egg-info/
+
+# -----------------------------------------------------------
+# Python-specific ignores
+# -----------------------------------------------------------
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Package dependencies
+pip-wheel-metadata/
+
+# Jupyter Notebook files
+.ipynb_checkpoints/  # Temporary checkpoints
+# Backup files
+*.ipynb_checkpoints
+*~.ipynb
+
+# -----------------------------------------------------------
+# Data science and ML-specific ignores
+# -----------------------------------------------------------
+# Dataset and raw data files (do not commit large data files)
+*.tsv
+*.xlsx
+
+# Model artifacts and logs
+models/
+artifacts/
+*.h5
+*.joblib
+*.npy
+*.pt  # PyTorch
+*.pth  # PyTorch
+*.ckpt  # Checkpoints
+
+# Experiment tracking (e.g., MLflow, TensorBoard)
+mlruns/
+tensorboard/
+
+# -----------------------------------------------------------
+# Security and credentials
+# -----------------------------------------------------------
+# Environment variables and sensitive data
+.env
+.flaskenv
+secrets/
+credentials.json
+
+# -----------------------------------------------------------
+# Specific to certain frameworks or libraries
+# -----------------------------------------------------------
+# Scikit-learn
+sk_model/
+
+# R
+.Rproj.user
+.Rhistory
+.RData
+
