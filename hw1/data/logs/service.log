@@ -1,26 +1,116 @@
-2025-10-17 22:21:08,197 - __main__ - INFO - Starting ML scoring service...
-2025-10-17 22:21:08,198 - __main__ - INFO - Initializing ProcessingService...
-2025-10-17 22:21:08,198 - __main__ - INFO - Loading model weights...
-2025-10-17 19:26:36,490 - __main__ - INFO - Starting ML scoring service...
-2025-10-17 19:26:36,492 - __main__ - INFO - Initializing ProcessingService...
-2025-10-17 19:26:36,492 - __main__ - INFO - Loading model weights...
-2025-10-17 19:33:35,937 - __main__ - INFO - Starting ML scoring service...
-2025-10-17 19:33:35,937 - __main__ - INFO - Initializing ProcessingService...
-2025-10-17 19:33:35,938 - __main__ - INFO - Loading model weights...
-2025-10-17 19:37:12,051 - __main__ - INFO - Starting ML scoring service...
-2025-10-17 19:37:12,052 - __main__ - INFO - Initializing ProcessingService...
-2025-10-17 19:37:12,052 - __main__ - INFO - Loading model weights...
-2025-10-17 19:38:28,808 - __main__ - INFO - Starting ML scoring service...
-2025-10-17 19:38:28,809 - __main__ - INFO - Initializing ProcessingService...
-2025-10-17 19:38:28,810 - __main__ - INFO - Loading model weights...
-2025-10-17 19:40:26,555 - __main__ - INFO - Starting ML scoring service...
-2025-10-17 19:40:26,556 - __main__ - INFO - Initializing ProcessingService...
-2025-10-17 19:40:26,557 - __main__ - INFO - Loading model weights...
-2025-10-17 19:40:26,674 - __main__ - INFO - Model loaded successfully, service initialized
-2025-10-17 19:40:26,676 - __main__ - INFO - File observer started
-2025-10-17 19:40:50,460 - __main__ - INFO - Processing file: /data/input/test.csv
-2025-10-17 19:40:51,691 - __main__ - INFO - Adding new file to model wrapepr
-2025-10-17 19:40:51,692 - __main__ - INFO - Preprocessing data
-2025-10-17 19:40:51,704 - __main__ - INFO - Making prediction
-2025-10-17 19:40:52,581 - __main__ - INFO - Prepraring submission file
-2025-10-17 19:40:53,161 - __main__ - INFO - Predictions saved to: predictions_20251017_194052_test.csv
+2025-10-17 20:40:03,688 - __main__ - INFO - Starting ML scoring service...
+2025-10-17 20:40:03,689 - __main__ - INFO - Initializing ProcessingService...
+2025-10-17 20:40:03,690 - __main__ - INFO - Loading model weights...
+2025-10-17 20:40:03,796 - __main__ - INFO - Model loaded successfully, service initialized
+2025-10-17 20:40:03,797 - __main__ - INFO - File observer started
+2025-10-17 20:41:05,002 - __main__ - INFO - Processing file: /data/input/test.csv
+2025-10-17 20:41:06,145 - __main__ - INFO - Adding new file to model wrapepr
+2025-10-17 20:41:06,146 - __main__ - INFO - Preprocessing data
+2025-10-17 20:41:06,156 - __main__ - INFO - Making prediction
+2025-10-17 20:41:07,021 - __main__ - INFO - Prepraring submission file
+2025-10-17 20:41:07,630 - __main__ - INFO - Predictions saved to: predictions_20251017_204107_test.csv
+2025-10-17 20:41:07,631 - __main__ - INFO - Preparing feature importance json file
+2025-10-17 20:41:07,632 - __main__ - ERROR - Error processing file /data/input/test.csv: 'elastic_net'
+Traceback (most recent call last):
+  File "/data/app.py", line 55, in process_single_file
+    importance_data = self.service_model.export_top5_feature_importances()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/src/model.py", line 46, in export_top5_feature_importances
+    model = self.model.named_steps["elastic_net"] # забыл заменить на нужное название модели когда делал пайплайн в ноутбуке))
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sklearn/utils/_bunch.py", line 42, in __getitem__
+    return super().__getitem__(key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'elastic_net'
+2025-10-17 20:43:21,674 - __main__ - INFO - Starting ML scoring service...
+2025-10-17 20:43:21,675 - __main__ - INFO - Initializing ProcessingService...
+2025-10-17 20:43:21,676 - __main__ - INFO - Loading model weights...
+2025-10-17 20:43:21,746 - __main__ - INFO - Model loaded successfully, service initialized
+2025-10-17 20:43:21,747 - __main__ - INFO - File observer started
+2025-10-17 20:43:53,123 - __main__ - INFO - Processing file: /data/input/test.csv
+2025-10-17 20:43:54,294 - __main__ - INFO - Adding new file to model wrapepr
+2025-10-17 20:43:54,295 - __main__ - INFO - Preprocessing data
+2025-10-17 20:43:54,303 - __main__ - INFO - Making prediction
+2025-10-17 20:43:55,184 - __main__ - INFO - Prepraring submission file
+2025-10-17 20:43:55,776 - __main__ - INFO - Predictions saved to: predictions_20251017_204355_test.csv
+2025-10-17 20:43:55,777 - __main__ - INFO - Preparing feature importance json file
+2025-10-17 20:43:55,778 - __main__ - ERROR - Error processing file /data/input/test.csv: feature_importances_ not found
+Traceback (most recent call last):
+  File "/data/app.py", line 55, in process_single_file
+    importance_data = self.service_model.export_top5_feature_importances()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/src/model.py", line 49, in export_top5_feature_importances
+    raise AttributeError("feature_importances_ not found")
+AttributeError: feature_importances_ not found
+2025-10-17 21:29:58,160 - __main__ - INFO - Starting ML scoring service...
+2025-10-17 21:29:58,161 - __main__ - INFO - Initializing ProcessingService...
+2025-10-17 21:29:58,162 - __main__ - INFO - Loading model weights...
+2025-10-17 21:30:53,305 - __main__ - INFO - Starting ML scoring service...
+2025-10-17 21:30:53,305 - __main__ - INFO - Initializing ProcessingService...
+2025-10-17 21:30:53,306 - __main__ - INFO - Loading model weights...
+2025-10-17 21:30:53,735 - __main__ - INFO - Model loaded successfully, service initialized
+2025-10-17 21:30:53,736 - __main__ - INFO - File observer started
+2025-10-17 21:31:07,625 - __main__ - INFO - Processing file: /data/input/test.csv
+2025-10-17 21:31:08,884 - __main__ - INFO - Adding new file to model wrapepr
+2025-10-17 21:31:08,885 - __main__ - INFO - Preprocessing data
+2025-10-17 21:31:08,896 - __main__ - INFO - Making prediction
+2025-10-17 21:31:10,451 - __main__ - INFO - Prepraring submission file
+2025-10-17 21:31:11,030 - __main__ - INFO - Predictions saved to: predictions_20251017_213110_test.csv
+2025-10-17 21:31:11,031 - __main__ - INFO - Preparing feature importance json file
+2025-10-17 21:31:11,039 - __main__ - INFO - Feature importances saved to: importance_20251017_213110_test.json
+2025-10-17 21:31:11,040 - __main__ - INFO - Scores density plot
+2025-10-17 21:31:12,525 - __main__ - INFO - Scores density plot saved to: scores_density_20251017_213110_test.png
+2025-10-17 21:33:48,888 - __main__ - INFO - Starting ML scoring service...
+2025-10-17 21:33:48,888 - __main__ - INFO - Initializing ProcessingService...
+2025-10-17 21:33:48,889 - __main__ - INFO - Loading model weights...
+2025-10-17 21:33:49,328 - __main__ - INFO - Model loaded successfully, service initialized
+2025-10-17 21:33:49,329 - __main__ - INFO - File observer started
+2025-10-17 21:33:57,187 - __main__ - INFO - Processing file: /data/input/test.csv
+2025-10-17 21:33:58,387 - __main__ - INFO - Adding new file to model wrapepr
+2025-10-17 21:33:58,388 - __main__ - INFO - Preprocessing data
+2025-10-17 21:33:58,396 - __main__ - INFO - Making prediction
+2025-10-17 21:33:59,876 - __main__ - INFO - Prepraring submission file
+2025-10-17 21:34:00,466 - __main__ - INFO - Predictions saved to: predictions_20251017_213359_test.csv
+2025-10-17 21:34:00,467 - __main__ - INFO - Preparing feature importance json file
+2025-10-17 21:34:00,475 - __main__ - INFO - Feature importances saved to: importance_20251017_213359_test.json
+2025-10-17 21:34:00,475 - __main__ - INFO - Scores density plot
+2025-10-17 21:34:01,870 - __main__ - ERROR - Error processing file /data/input/test.csv: hist() missing 1 required positional argument: 'x'
+Traceback (most recent call last):
+  File "/data/app.py", line 61, in process_single_file
+    self.service_model.save_scores_density_plot(input_df, out_path=os.path.join(self.output_dir, plot_output_filename))
+  File "/data/src/model.py", line 56, in save_scores_density_plot
+    plt.hist(proba = self.model.predict_proba(X)[:, 1], bins=bins, density=True)
+  File "/usr/local/lib/python3.11/site-packages/matplotlib/_api/deprecation.py", line 453, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+TypeError: hist() missing 1 required positional argument: 'x'
+2025-10-17 21:34:46,632 - __main__ - INFO - Starting ML scoring service...
+2025-10-17 21:34:46,633 - __main__ - INFO - Initializing ProcessingService...
+2025-10-17 21:34:46,633 - __main__ - INFO - Loading model weights...
+2025-10-17 21:34:47,078 - __main__ - INFO - Model loaded successfully, service initialized
+2025-10-17 21:34:47,080 - __main__ - INFO - File observer started
+2025-10-17 21:34:49,825 - __main__ - INFO - Processing file: /data/input/test.csv
+2025-10-17 21:34:51,056 - __main__ - INFO - Adding new file to model wrapepr
+2025-10-17 21:34:51,057 - __main__ - INFO - Preprocessing data
+2025-10-17 21:34:51,065 - __main__ - INFO - Making prediction
+2025-10-17 21:34:52,617 - __main__ - INFO - Prepraring submission file
+2025-10-17 21:34:53,270 - __main__ - INFO - Predictions saved to: predictions_20251017_213452_test.csv
+2025-10-17 21:34:53,271 - __main__ - INFO - Preparing feature importance json file
+2025-10-17 21:34:53,280 - __main__ - INFO - Feature importances saved to: importance_20251017_213452_test.json
+2025-10-17 21:34:53,281 - __main__ - INFO - Scores density plot
+2025-10-17 21:34:54,773 - __main__ - INFO - Scores density plot saved to: scores_density_20251017_213452_test.png
+2025-10-17 21:41:01,832 - __main__ - INFO - Starting ML scoring service...
+2025-10-17 21:41:01,833 - __main__ - INFO - Initializing ProcessingService...
+2025-10-17 21:41:01,833 - __main__ - INFO - Loading model weights...
+2025-10-17 21:41:02,320 - __main__ - INFO - Model loaded successfully, service initialized
+2025-10-17 21:41:02,322 - __main__ - INFO - File observer started
+2025-10-17 21:41:03,811 - __main__ - INFO - Processing file: /data/input/test.csv
+2025-10-17 21:41:05,017 - __main__ - INFO - Adding new file to model wrapepr
+2025-10-17 21:41:05,019 - __main__ - INFO - Preprocessing data
+2025-10-17 21:41:05,027 - __main__ - INFO - Making prediction
+2025-10-17 21:41:06,561 - __main__ - INFO - Prepraring submission file
+2025-10-17 21:41:07,162 - __main__ - INFO - Predictions saved to: predictions_20251017_214106_test.csv
+2025-10-17 21:41:07,163 - __main__ - INFO - Preparing feature importance json file
+2025-10-17 21:41:07,171 - __main__ - INFO - Feature importances saved to: importance_20251017_214106_test.json
+2025-10-17 21:41:07,172 - __main__ - INFO - Scores density plot
+2025-10-17 21:41:08,609 - __main__ - INFO - Scores density plot saved to: scores_density_20251017_214106_test.png

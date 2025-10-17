@@ -27,7 +27,7 @@ class ProcessingService:
         self.input_dir = '/data/input'
         self.output_dir = '/data/output'
         logger.info('Loading model weights...')
-        self.service_model = ModelWrapper(model_path='/data/model_weights/best_hist_gb_model.pkl')
+        self.service_model = ModelWrapper(model_path='/data/model_weights/best_rf_model.pkl')
         logger.info('Model loaded successfully, service initialized')
 
     def process_single_file(self, file_path):
@@ -49,6 +49,17 @@ class ProcessingService:
             output_filename = f"predictions_{timestamp}_{os.path.basename(file_path)}"
             submission.to_csv(os.path.join(self.output_dir, output_filename), index=False)
             logger.info('Predictions saved to: %s', output_filename)
+
+            logger.info('Preparing feature importance json file')
+            json_output_filename = f"importance_{timestamp}_{os.path.basename(file_path).replace('.csv', '.json')}"
+            importance_data = self.service_model.export_top5_feature_importances()
+            pd.Series(importance_data).to_json(os.path.join(self.output_dir, json_output_filename))
+            logger.info('Feature importances saved to: %s', json_output_filename)
+
+            logger.info('Scores density plot')
+            plot_output_filename = f"scores_density_{timestamp}_{os.path.basename(file_path).replace('.csv', '.png')}"
+            self.service_model.save_scores_density_plot(input_df, out_path=os.path.join(self.output_dir, plot_output_filename))
+            logger.info('Scores density plot saved to: %s', plot_output_filename)
 
         except Exception as e:
             logger.error('Error processing file %s: %s', file_path, e, exc_info=True)
