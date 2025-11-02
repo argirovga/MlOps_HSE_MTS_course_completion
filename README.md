@@ -4,7 +4,7 @@
 
 ---
 
-# HW 1️⃣
+# HW 1
 
 ## 📂 Структура дз
 
@@ -132,3 +132,93 @@ python app.py
 После запуска можно также просто добавлять CSV-файлы в `data/input`, и сервис будет их автоматически обрабатывать.
 
 ---
+
+# HW 2
+
+## CТЕК
+- Redpanda (Kafka API, без Zookeeper как в примере из семерской репы)
+- PostgreSQL 16
+- Python-сервисы: producer -> scorer -> sink
+- Streamlit UI
+
+## СТРУКТУРА РЕПОЗИТОРИЯ
+
+```bash
+├─ data/
+│  ├─ logs/                       # (опционально) локальные логи сервисов
+│  ├─ model_weights/
+│  │  └─ best_rf_model.pkl        # обученная модель из HW1
+│  └─ test.csv                    # тестовый датасет для стрима
+├─ requirements/
+│  ├─ requirements_producer.txt
+│  ├─ requirements_scorer.txt
+│  ├─ requirements_sink.txt
+│  └─ requirements_ui.txt
+├─ services/
+│  ├─ producer/
+│  │  └─ producer.py              # читает test.csv -> topic `transactions`
+│  ├─ scorer/
+│  │  └─ main.py                  # читает `transactions` -> скорит -> пишет `scores`
+│  └─ sink/
+│     └─ main.py                  # читает `scores` -> пишет в Postgres
+├─ src/
+│  ├─ __init__.py
+│  ├─ models.py                   # ModelWrapper + ColumnSelector
+│  └─ model.py                    # shim для совместимости с пиклом HW1
+├─ ui/
+│  └─ app.py                      # Streamlit (кнопка «Посмотреть результаты»)
+├─ Dockerfile.producer
+├─ Dockerfile.scorer
+├─ Dockerfile.sink
+├─ Dockerfile.ui
+├─ docker-compose.yml
+└─ README.md
+```
+
+## БЫСТРЫЙ СТАРТ (С НУЛЯ)
+1) Поднять стек
+  ```bash
+  docker compose down -v  # если до этого уже запускали что-то
+  docker compose up --build -d
+  docker compose ps   # убедиться, что все Up (продьюсер может быть exited)
+  ```
+
+2) Отправить данные в Kafka
+  ```bash
+  docker compose run --rm producer
+  ```
+  Producer читает ./data/test.csv и отправляет строки в topic transactions.
+
+3) Проверить, что записи попали в БД
+  ```bash
+  docker exec -it db psql -U mlops -d mlops -c "
+  SELECT transaction_id, score, fraud_flag, scored_at
+  FROM scores ORDER BY scored_at DESC LIMIT 10;"
+  ```
+
+4) Открыть UI
+   Браузер: http://localhost:8501 -> кнопка «Посмотреть результаты»
+   - слева: последние 10 транзакций с fraud_flag = 1
+   - справа: гистограмма скоров последних 100 транзакций
+   
+   **важная пометка: в тестовой выборке из кагла, нет никаких транзакшен айди, поэтому они будут нан если вы их не добавите при проверке моего дз**
+
+## ПОВТОРНЫЙ ПРОГОН
+- Изменил/добавил строки в data/test.csv -> переотправить:
+  docker compose run --rm producer
+- Обнови страницу UI.
+
+## НАСТРОЙКИ (env в docker-compose.yml)
+- Порог фрода:
+  scorer -> THRESHOLD=0.5
+- Топики:
+  вход: transactions
+  выход: scores
+- Модель:
+  scorer -> MODEL_PATH=/data/model_weights/best_rf_model.pkl
+
+## КАК ЭТО РАБОТАЕТ (КОРОТКО)
+1. producer читает data/test.csv, добавляет transaction_id если его нет (по номеру строки), публикует JSON в Kafka topic transactions.
+2. scorer читает сообщения, делает препроцессинг как в HW1 (через pipeline), считает score (вероятность), ставит fraud_flag по порогу и публикует результат в topic scores.
+3. sink читает scores и пишет в Postgres таблицу scores (создаёт её при необходимости).
+4. ui показывает результаты из БД.

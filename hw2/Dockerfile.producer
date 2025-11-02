@@ -1,0 +1,8 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements/requirements_producer.txt .
+RUN pip install --no-cache-dir -r requirements_producer.txt
+COPY src ./src
+COPY services/producer ./services/producer
+ENV PYTHONPATH="/app"
+CMD ["python", "services/producer/producer.py"]

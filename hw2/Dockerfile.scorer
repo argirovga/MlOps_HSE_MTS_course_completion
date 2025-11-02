@@ -1,0 +1,8 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements/requirements_scorer.txt .
+RUN pip install --no-cache-dir -r requirements_scorer.txt
+COPY src ./src
+COPY services/scorer ./services/scorer
+ENV PYTHONPATH="/app"
+CMD ["python", "services/scorer/main.py"]

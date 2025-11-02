@@ -1,0 +1,126 @@
+version: "3.9"
+
+services:
+  kafka:
+    image: redpandadata/redpanda:latest
+    container_name: kafka
+    command:
+      - redpanda start
+      - --overprovisioned
+      - --smp=1
+      - --memory=1G
+      - --reserve-memory=0M
+      - --node-id=0
+      - --check=false
+      - --set
+      - redpanda.auto_create_topics_enabled=true
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://kafka:9092
+    ports:
+      - "9092:9092"
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "/usr/bin/rpk cluster info --brokers localhost:9092 >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    networks: [ml-scorer]
+    restart: unless-stopped
+  db:
+    image: postgres:16
+    container_name: db
+    environment:
+      - POSTGRES_USER=mlops
+      - POSTGRES_PASSWORD=mlops
+      - POSTGRES_DB=mlops
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks: [ml-scorer]
+    restart: unless-stopped
+
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.producer
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - TEST_CSV=/data/test.csv
+      - STARTUP_DELAY_SEC=5
+    volumes:
+      - ./data:/data:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks: [ml-scorer]
+    restart: "no"
+
+  scorer:
+    build:
+      context: .
+      dockerfile: Dockerfile.scorer
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_IN_TOPIC=transactions
+      - KAFKA_OUT_TOPIC=scores
+      - KAFKA_GROUP_ID=scorer
+      - MODEL_PATH=/data/model_weights/best_rf_model.pkl
+      - THRESHOLD=0.5
+      - STARTUP_DELAY_SEC=3
+    volumes:
+      - ./data/model_weights:/data/model_weights:ro
+      - ./data/logs:/data/logs
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks: [ml-scorer]
+    restart: unless-stopped
+
+  sink:
+    build:
+      context: .
+      dockerfile: Dockerfile.sink
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_SCORES_TOPIC=scores
+      - KAFKA_GROUP_ID=scores_sink
+      - POSTGRES_USER=mlops
+      - POSTGRES_PASSWORD=mlops
+      - POSTGRES_DB=mlops
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - PG_TABLE=scores
+      - STARTUP_DELAY_SEC=3
+    depends_on:
+      kafka:
+        condition: service_healthy
+      db:
+        condition: service_started
+    networks: [ml-scorer]
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    environment:
+      - POSTGRES_USER=mlops
+      - POSTGRES_PASSWORD=mlops
+      - POSTGRES_DB=mlops
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - PG_TABLE=scores
+    depends_on:
+      db:
+        condition: service_started
+    ports:
+      - "8501:8501"
+    networks: [ml-scorer]
+    restart: unless-stopped
+
+volumes:
+  dbdata:
+
+networks:
+  ml-scorer:
