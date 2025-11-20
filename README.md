@@ -384,17 +384,17 @@ docker compose exec clickhouse \
 ```bash
 docker compose exec clickhouse \
   clickhouse-client -q "
+    INSERT INTO hw3.max_txn_by_state_agg
     SELECT
         us_state,
-        argMaxMerge(max_cat_state) AS max_category,
-        maxMerge(max_amount_state) AS max_amount
-    FROM hw3.max_txn_by_state_agg
+        maxState(amount),
+        argMaxState(cat_id, amount)
+    FROM hw3.transactions_mt
     GROUP BY us_state
-    ORDER BY us_state
   "
 ```
 
-5. Выгрузка результатов в CSV
+7. Выгрузка результатов в CSV
 ```bash
 mkdir -p results
 
