@@ -4,6 +4,12 @@
 
 ---
 
+### Table of Contents
+
+- [HW 1](#hw-1)
+- [HW 2](#hw-2)
+- [HW 3](#hw-3)
+
 # HW 1
 
 ## 📂 Структура дз
@@ -222,3 +228,206 @@ python app.py
 2. scorer читает сообщения, делает препроцессинг как в HW1 (через pipeline), считает score (вероятность), ставит fraud_flag по порогу и публикует результат в topic scores.
 3. sink читает scores и пишет в Postgres таблицу scores (создаёт её при необходимости).
 4. ui показывает результаты из БД.
+
+
+# HW 3
+
+## CТЕК
+- Redpanda (Kafka API, без Zookeeper)
+- ClickHouse 23.8
+- Python 3.11 (отдельный producer: CSV → Kafka)
+- Docker Compose
+
+## СТРУКТУРА РЕПОЗИТОРИЯ
+
+```bash
+.
+├─ data/
+│  └─ raw_data/
+│     └─ train.csv
+├─ results/
+│  └─ max_category_per_state.csv # сюда кладем результат п.3
+├─ services/
+│  └─ producer.py # п.1
+├─ clickhouse/
+│  └─ sql/
+│     ├─ 01_ddl.sql # п.2 (DDL Kafka->MergeTree+MV)
+│     ├─ 02_query_max_category.sql # п.3 (запрос на CSV)
+│     └─ 03_optimized_ddl.sql # п.4 (оптимизация)
+├─ Dockerfile.producer_hw3
+└─ docker-compose.yml
+```
+
+## БЫСТРЫЙ СТАРТ (С НУЛЯ БЕЗ оптимизации)
+
+1.  Чистый старт (сотрёт данные ClickHouse)
+
+```bash
+docker compose down -v
+```
+
+2. Запустить брокер и ClickHouse (ждём healthcheck)
+
+```bash
+docker compose up -d kafka clickhouse
+```
+
+Проверяем доступность ClickHouse:
+```bash
+curl http://localhost:8123/ping
+```
+
+3. Применить DDL (Kafka Engine → MergeTree + MV)
+
+```bash
+docker compose exec -T clickhouse \
+  clickhouse-client --multiquery < clickhouse/sql/01_ddl.sql
+```
+
+Проверка:
+```bash
+docker compose exec clickhouse \
+  clickhouse-client -q "SHOW TABLES FROM hw3"
+```
+
+Должны появится три таблицы
+
+4. Отправить данные из CSV в Kafka topic `transactions_raw`
+
+```bash
+docker compose run --rm producer
+```
+
+Проверка:
+```bash
+docker compose exec clickhouse \
+  clickhouse-client -q "SELECT count() FROM hw3.transactions_mt"
+```
+
+Должно быть больше 0
+
+5. Выгрузка результатов в CSV
+```bash
+mkdir -p results
+
+docker compose exec -T clickhouse \
+  clickhouse-client \
+  --format CSVWithNames \
+  --query="$(cat clickhouse/sql/02_query_max_category.sql)" \
+  > results/max_category_per_state.csv
+```
+
+## БЫСТРЫЙ СТАРТ (С НУЛЯ С оптимизацией)
+
+1.  Чистый старт (сотрёт данные ClickHouse)
+
+```bash
+docker compose down -v
+```
+
+2. Запустить брокер и ClickHouse (ждём healthcheck)
+
+```bash
+docker compose up -d kafka clickhouse
+```
+
+Проверяем доступность ClickHouse:
+```bash
+curl http://localhost:8123/ping
+```
+
+3. Применить DDL (Kafka Engine → MergeTree + MV)
+
+```bash
+docker compose exec -T clickhouse \
+  clickhouse-client --multiquery < clickhouse/sql/01_ddl.sql
+```
+
+Проверка:
+```bash
+docker compose exec clickhouse \
+  clickhouse-client -q "SHOW TABLES FROM hw3"
+```
+
+Должны появится три таблицы
+
+4. Отправить данные из CSV в Kafka topic `transactions_raw`
+
+```bash
+docker compose run --rm producer
+```
+
+Проверка:
+```bash
+docker compose exec clickhouse \
+  clickhouse-client -q "SELECT count() FROM hw3.transactions_mt"
+```
+
+Должно быть больше 0
+
+5. ВКЛЮЧАЕМ ОПТИМИЗАЦИЮ
+
+```bash
+docker compose exec -T clickhouse \
+  clickhouse-client --multiquery < clickhouse/sql/03_optimized_ddl.sql
+```
+
+Проверка:
+```bash
+docker compose exec clickhouse \
+  clickhouse-client -q "SHOW TABLES FROM hw3"
+```
+Должны были появится новые таблицы
+
+6. Подгружаем старые данные (единожды):
+
+```bash
+docker compose exec clickhouse \
+  clickhouse-client -q "
+    INSERT INTO hw3.max_txn_by_state_agg
+    SELECT
+        us_state,
+        maxState(amount),
+        argMaxState(cat_id, amount)
+    FROM hw3.transactions_mt
+    GROUP BY us_state
+  "
+```
+
+5. Выгрузка результатов в CSV
+```bash
+mkdir -p results
+
+docker compose exec -T clickhouse \
+  clickhouse-client \
+  --format CSVWithNames \
+  -q "
+    SELECT
+        us_state,
+        argMaxMerge(max_cat_state, max_amount_state) AS max_category,
+        maxMerge(max_amount_state) AS max_amount
+    FROM hw3.max_txn_by_state_agg
+    GROUP BY us_state
+    ORDER BY us_state
+  " \
+  > results/max_category_per_state.csv
+```
+
+## НАСТРОЙКИ (env в docker-compose.yml)
+
+- Producer:
+	- `KAFKA_BOOTSTRAP_SERVERS=kafka:9092`
+	- `KAFKA_TOPIC=transactions_raw`
+	- `CSV_PATH=/data/raw_data/train.csv`
+	- `STARTUP_DELAY_SEC=3`
+- ClickHouse:
+	- Порты: `HTTP 8123`, `Native 9000`
+	- SQL: `clickhouse/sql/*.sql` монтируются в `/docker-entrypoint-initdb.d`
+- Redpanda (Kafka API):
+	- `--advertise-kafka-addr=PLAINTEXT://kafka:9092`
+	- `redpanda.auto_create_topics_enabled=true` (включено)
+
+## КАК ЭТО РАБОТАЕТ (КОРОТКО)
+
+1. `services/producer.py` читает `data/raw_data/train.csv`, формирует JSON-строки, добавляет transaction_id (если нет — по номеру строки), публикует в Kafka topic transactions_raw.
+2. В ClickHouse создаётся `hw3.transactions_kafka` (движок Kafka, формат JSONEachRow), материализованная вьюха mv_to_mt переливает поток

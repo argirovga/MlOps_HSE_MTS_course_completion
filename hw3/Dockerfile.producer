@@ -1,0 +1,13 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Ставим зависимости
+COPY requirements_producer.txt .
+RUN pip install --no-cache-dir -r requirements_producer.txt
+
+# Копируем продюсер
+COPY services/producer.py ./services/producer.py
+
+# Точка входа — наш скрипт
+ENTRYPOINT ["python", "services/producer.py"]
