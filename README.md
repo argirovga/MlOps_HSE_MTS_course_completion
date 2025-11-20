@@ -384,13 +384,13 @@ docker compose exec clickhouse \
 ```bash
 docker compose exec clickhouse \
   clickhouse-client -q "
-    INSERT INTO hw3.max_txn_by_state_agg
     SELECT
         us_state,
-        maxState(amount),
-        argMaxState(cat_id, amount)
-    FROM hw3.transactions_mt
+        argMaxMerge(max_cat_state) AS max_category,
+        maxMerge(max_amount_state) AS max_amount
+    FROM hw3.max_txn_by_state_agg
     GROUP BY us_state
+    ORDER BY us_state
   "
 ```
 
@@ -404,7 +404,7 @@ docker compose exec -T clickhouse \
   -q "
     SELECT
         us_state,
-        argMaxMerge(max_cat_state, max_amount_state) AS max_category,
+        argMaxMerge(max_cat_state) AS max_category,
         maxMerge(max_amount_state) AS max_amount
     FROM hw3.max_txn_by_state_agg
     GROUP BY us_state
@@ -418,7 +418,7 @@ docker compose exec -T clickhouse \
 - Producer:
 	- `KAFKA_BOOTSTRAP_SERVERS=kafka:9092`
 	- `KAFKA_TOPIC=transactions_raw`
-	- `CSV_PATH=/data/raw_data/train.csv`
+	- `CSV_PATH=/data/raw_data/test.csv`
 	- `STARTUP_DELAY_SEC=3`
 - ClickHouse:
 	- Порты: `HTTP 8123`, `Native 9000`

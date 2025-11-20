@@ -8,7 +8,7 @@ CREATE TABLE hw3.transactions_kafka
 (
     transaction_id String,
     us_state       String,
-    cat_id         String,   -- ← ИСПРАВЛЕНО: String, а не Int32
+    cat_id         String,
     amount         Float64
 )
 ENGINE = Kafka
@@ -25,7 +25,7 @@ CREATE TABLE hw3.transactions_mt
 (
     transaction_id String,
     us_state       String,
-    cat_id         String,   -- ← Тоже String
+    cat_id         String,
     amount         Float64,
     event_date     Date DEFAULT today()
 )
