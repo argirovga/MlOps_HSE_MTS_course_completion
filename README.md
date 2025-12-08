@@ -431,3 +431,7 @@ docker compose exec -T clickhouse \
 
 1. `services/producer.py` читает `data/raw_data/train.csv`, формирует JSON-строки, добавляет transaction_id (если нет — по номеру строки), публикует в Kafka topic transactions_raw.
 2. В ClickHouse создаётся `hw3.transactions_kafka` (движок Kafka, формат JSONEachRow), материализованная вьюха mv_to_mt переливает поток
+
+# HW 4
+
+КАК И ПРОСИЛИ РИДМИ К ЭТОМУ ДЗ ТЕПЕРЬ В ДИРЕКТОРИИ САМОГО ДЗ

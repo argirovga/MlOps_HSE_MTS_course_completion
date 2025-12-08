@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: hw4_clickhouse
+    ports:
+      - "8123:8123"    # HTTP API
+      - "9000:9000"    # native client
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    environment:
+      CLICKHOUSE_USER: hw4
+      CLICKHOUSE_PASSWORD: hw4_pass
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    healthcheck:
+      test: ["CMD", "curl", "-u", "hw4:hw4_pass", "-f", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  clickhouse-data:

@@ -1,0 +1,83 @@
+version: 2
+
+unit:
+  - name: stg_transactions_amount_bucket_unit
+    description: Validate amount bucketing and derived columns in staging layer.
+    model: stg_transactions
+    given:
+      - input: source('transactions_db', 'transactions')
+        rows:
+          - transaction_time: 2024-01-01 10:00:00
+            merch: m1
+            cat_id: groceries
+            amount: 250
+            name_1: Anna
+            name_2: Smith
+            gender: F
+            us_state: CA
+            lat: 37.1
+            lon: -122.1
+            merchant_lat: 37.4
+            merchant_lon: -122.3
+            target: 0
+          - transaction_time: 2024-01-02 21:30:00
+            merch: m2
+            cat_id: electronics
+            amount: 700
+            name_1: John
+            name_2: Doe
+            gender: M
+            us_state: NY
+            lat: 40.7
+            lon: -73.9
+            merchant_lat: 40.8
+            merchant_lon: -74.0
+            target: 1
+    expect:
+      rows:
+        - transaction_ts: 2024-01-01 10:00:00
+          transaction_date: 2024-01-01
+          transaction_week_start: 2024-01-01
+          transaction_month_start: 2024-01-01
+          transaction_hour_ts: 2024-01-01 10:00:00
+          transaction_hour: 10
+          transaction_dow: 1
+          transaction_dow_name: Monday
+          us_state: CA
+          merchant_id: m1
+          category_id: groceries
+          amount: 250
+          amount_bucket: MEDIUM
+          is_fraud: 0
+          customer_first_name: anna
+          customer_last_name: smith
+          customer_id: anna_smith_f
+          gender: F
+          customer_lat: 37.1
+          customer_lon: -122.1
+          merchant_lat: 37.4
+          merchant_lon: -122.3
+          is_large_amount: 0
+        - transaction_ts: 2024-01-02 21:30:00
+          transaction_date: 2024-01-02
+          transaction_week_start: 2024-01-01
+          transaction_month_start: 2024-01-01
+          transaction_hour_ts: 2024-01-02 21:00:00
+          transaction_hour: 21
+          transaction_dow: 2
+          transaction_dow_name: Tuesday
+          us_state: NY
+          merchant_id: m2
+          category_id: electronics
+          amount: 700
+          amount_bucket: HIGH
+          is_fraud: 1
+          customer_first_name: john
+          customer_last_name: doe
+          customer_id: john_doe_m
+          gender: M
+          customer_lat: 40.7
+          customer_lon: -73.9
+          merchant_lat: 40.8
+          merchant_lon: -74.0
+          is_large_amount: 1
